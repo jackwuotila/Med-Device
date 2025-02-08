@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
-from bs4 import BeautifulSoup
 import openai
 import os
+import re
 
 # Set OpenAI API key from Streamlit Secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -20,13 +20,18 @@ def summarize_research(paper_text):
     )
     return response["choices"][0]["text"]
 
-# Function to search PubMed
+# Function to search PubMed without BeautifulSoup
 def search_pubmed(surgeon_name):
     url = f"https://pubmed.ncbi.nlm.nih.gov/?term={surgeon_name.replace(' ', '+')}"
     response = requests.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    results = soup.find_all("a", class_="docsum-title")
-    publications = [result.text.strip() for result in results[:5]]
+    
+    if response.status_code != 200:
+        return []
+    
+    # Extract publication titles using regex
+    titles = re.findall(r'(?<=class="docsum-title".*?>)(.*?)(?=</a>)', response.text)
+    publications = [re.sub('<.*?>', '', title).strip() for title in titles[:5]]  # Clean up HTML tags
+    
     return publications
 
 # Streamlit UI
@@ -55,4 +60,3 @@ if surgeon_name:
 
 st.write("\n---\n")
 st.write("🔍 **A Tool for Sales Reps to Research Surgeons and Their Market**")
-

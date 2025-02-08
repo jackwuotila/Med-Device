@@ -29,7 +29,7 @@ def search_pubmed(surgeon_name):
         return []
     
     # Extract publication titles using regex
-    titles = re.findall(r'(?<=class="docsum-title".*?>)(.*?)(?=</a>)', response.text)
+    titles = re.findall(r'class="docsum-title"[^>]*>(.*?)</a>', response.text)
     publications = [re.sub('<.*?>', '', title).strip() for title in titles[:5]]  # Clean up HTML tags
     
     return publications
